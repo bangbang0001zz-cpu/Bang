@@ -1,1 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toko Fais PRO</title>
 
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background: linear-gradient(135deg, #2b0000, #3b0066);
+    color:white;
+    text-align:center;
+}
+
+.card{
+    background: rgba(0,0,0,0.6);
+    margin:10px auto;
+    padding:15px;
+    width:90%;
+    max-width:400px;
+    border-radius:15px;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    margin-top:6px;
+    border:none;
+    border-radius:10px;
+    background:#ff00cc;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{ background:#ff4de3; }
+
+.add{ background:#00c853; }
+.add:hover{ background:#00e676; }
+
+.del{ background:#e53935; }
+.del:hover{ background:#ff5252; }
+
+.admin{ background:#ff9800; }
+.admin:hover{ background:#ffc107; }
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border:none;
+    border-radius:8px;
+}
+
+.stock{ color:#ffd700; font-size:14px; }
+
+.item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(255,255,255,0.1);
+    padding:6px;
+    margin:5px 0;
+    border-radius:8px;
+}
+
+.item button{
+    width:auto;
+    padding:5px 10px;
+    margin:0;
+    font-size:12px;
+}
+
+#adminPanel{ display:none; }
+#loginBox{ display:block; }
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>🔥 TOKO FAIS PRO 🔥</h1>
+    <p>Pemilik: Lev</p>
+</div>
+
+<div class="card" id="loginBox">
+    <h3>🔐 Login Admin</h3>
+    <input type="password" id="pass" placeholder="Masukkan password admin">
+    <button onclick="login()">Login</button>
+    <p id="msg"></p>
+</div>
+
+<div class="card" id="adminPanel">
+    <h3>⚙ ADMIN PANEL (STOK & HARGA)</h3>
+
+    <input type="text" id="pname" placeholder="XZERO / OTAX / TOXIC">
+    <input type="number" id="pvalue" placeholder="Stok / Harga">
+    
+    <button class="admin" onclick="addStock()">Tambah/Kurang Stok</button>
+    <button class="admin" onclick="setPrice()">Ubah Harga</button>
+
+    <hr>
+
+    <p class="stock" id="s1"></p>
+    <p class="stock" id="s2"></p>
+    <p class="stock" id="s3"></p>
+</div>
+
+<div class="card">
+    <h3>🛒 Keranjang</h3>
+
+    <input type="text" id="nama" placeholder="Nama kamu">
+    <input type="text" id="voucher" placeholder="Kode Voucher FAIS10">
+
+    <button class="add" onclick="add('XZERO')">+ XZERO</button>
+    <button class="add" onclick="add('OTAX')">+ OTAX</button>
+    <button class="add" onclick="add('TOXIC')">+ TOXIC</button>
+
+    <hr>
+
+    <div id="cartBox"></div>
+
+    <p id="totalText"></p>
+
+    <button onclick="checkout()">Checkout</button>
+</div>
+
+<script>
+
+let cart = [];
+
+let data = {
+    XZERO: {stock:5, price:30000},
+    OTAX:  {stock:3, price:60000},
+    TOXIC: {stock:4, price:25000}
+};
+
+// LOGIN ADMIN
+function login(){
+    let pass = document.getElementById("pass").value;
+
+    if(pass === "fais123"){
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminPanel").style.display = "block";
+        render();
+    }else{
+        document.getElementById("msg").innerText = "Password salah!";
+    }
+}
+
+function add(item){
+    if(data[item].stock <= 0){
+        alert("Stok habis!");
+        return;
+    }
+
+    cart.push(item);
+    data[item].stock--;
+
+    render();
+}
+
+function remove(index){
+    let item = cart[index];
+    data[item].stock++;
+
+    cart.splice(index,1);
+    render();
+}
+
+function addStock(){
+    let name = document.getElementById("pname").value.toUpperCase();
+    let val = parseInt(document.getElementById("pvalue").value);
+
+    if(data[name]){
+        data[name].stock += val;
+        render();
+    }
+}
+
+function setPrice(){
+    let name = document.getElementById("pname").value.toUpperCase();
+    let val = parseInt(document.getElementById("pvalue").value);
+
+    if(data[name]){
+        data[name].price = val;
+        render();
+    }
+}
+
+function render(){
+
+    document.getElementById("s1").innerText = `XZERO | Stok: ${data.XZERO.stock} | Rp${data.XZERO.price}`;
+    document.getElementById("s2").innerText = `OTAX | Stok: ${data.OTAX.stock} | Rp${data.OTAX.price}`;
+    document.getElementById("s3").innerText = `TOXIC | Stok: ${data.TOXIC.stock} | Rp${data.TOXIC.price}`;
+
+    let box = document.getElementById("cartBox");
+    box.innerHTML = "";
+
+    let total = 0;
+
+    if(cart.length === 0){
+        box.innerHTML = "<p>Keranjang kosong</p>";
+    }else{
+        cart.forEach((item,index)=>{
+            total += data[item].price;
+
+            box.innerHTML += `
+            <div class="item">
+                <span>${item} - Rp${data[item].price}</span>
+                <button class="del" onclick="remove(${index})">Hapus</button>
+            </div>`;
+        });
+    }
+
+    document.getElementById("totalText").innerText = "Total: Rp" + total;
+}
+
+function checkout(){
+    let nama = document.getElementById("nama").value;
+    let voucher = document.getElementById("voucher").value;
+
+    if(nama === "" || cart.length === 0){
+        alert("Isi data & keranjang!");
+        return;
+    }
+
+    let total = 0;
+    cart.forEach(i => total += data[i].price);
+
+    let diskon = 0;
+    if(voucher === "FAIS10"){
+        diskon = total * 0.10;
+    }
+
+    let bayar = total - diskon;
+
+    let pesan =
+`🔥 ORDER TOKO FAIS 🔥
+Nama: ${nama}
+Produk: ${cart.join(", ")}
+Total: Rp${total}
+Diskon: Rp${diskon}
+Bayar: Rp${bayar}`;
+
+    let waUrl = "https://wa.me/6285380620484?text=" + encodeURIComponent(pesan);
+    let tgUrl = "https://t.me/share/url?url=&text=" + encodeURIComponent(pesan);
+
+    let pilih = confirm("OK = WhatsApp\nCancel = Telegram");
+
+    if(pilih){
+        window.open(waUrl, "_blank");
+    } else {
+        window.open(tgUrl, "_blank");
+    }
+}
+
+render();
+
+</script>
+
+</body>
+  </html>
